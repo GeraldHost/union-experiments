@@ -24,6 +24,10 @@ contract UToken is ERC20("uDAI", "uDAI") {
 
   mapping(address => Staker) public stakers;
 
+  /* -------------------------------------------------------------------
+    Events 
+  ------------------------------------------------------------------- */
+
   /// @notice Event emitted when user stakes
   /// @param sender The sender who staked
   /// @param amount Amount of tokens (DAI) staked
@@ -44,10 +48,21 @@ contract UToken is ERC20("uDAI", "uDAI") {
   /// @param amount Amount repaid
   event LogRepay(address sender, uint256 amount);
   
+  /// @notice debug for testing
+  event Debug(bytes value);
+
+  /* -------------------------------------------------------------------
+    Constructooor 
+  ------------------------------------------------------------------- */
+  
   /// @param _token Underlying token
   constructor(IERC20 _token) {
     token = _token;
   }
+
+  /* -------------------------------------------------------------------
+    Core Functions
+  ------------------------------------------------------------------- */
 
   /// @notice Stake token (DAI) to underwrite loans
   /// @dev Staked tokens (DAI) is used to underwrite loan but is not the
@@ -80,12 +95,12 @@ contract UToken is ERC20("uDAI", "uDAI") {
   /// @param amount Amount of tokens (DAI) to borrow
   function borrow(uint256 amount) external {
     Staker storage borrower = stakers[msg.sender];
-    _sortVouchesInplace(borrower);
+    Vouch[] storage vouches = _sortVouches(borrower);
 
     uint256 remaining = amount;
 
-    for(uint256 i = 0; i < borrower.vouches.length; i++) {
-      Vouch storage vouch = borrower.vouches[i];
+    for(uint256 i = 0; i < vouches.length; i++) {
+      Vouch storage vouch = vouches[i];
       Staker storage staker = stakers[vouch.staker];
 
       uint256 maxBorrowing = _max(staker.stakedAmount, vouch.amount) - staker.outstanding;
@@ -108,12 +123,12 @@ contract UToken is ERC20("uDAI", "uDAI") {
   /// @param amount Amount of tokens (DAI) to repay
   function repay(uint256 amount) external {
     Staker storage borrower = stakers[msg.sender];
-    _sortVouchesInplace(borrower);
+    Vouch[] storage vouches = _sortVouches(borrower);
 
     uint256 remaining = amount;
 
-    for(uint256 i = 0; i < borrower.vouches.length; i++) {
-      Vouch storage vouch = borrower.vouches[i];
+    for(uint256 i = 0; i < vouches.length; i++) {
+      Vouch storage vouch = vouches[i];
       Staker storage staker = stakers[vouch.staker];
 
       uint256 maxRepay = _min(remaining, vouch.outstanding);
@@ -137,7 +152,11 @@ contract UToken is ERC20("uDAI", "uDAI") {
   /// are going to ignore deplicate vouches and remove vouches etc
   /// in reality you'd also want to tracking a mapping of vouch indexes
   /// so we can update vouches 
+  /// @param borrower Borrower to vouch for
+  /// @param amount Amount to vouch for borrower
   function updateVouch(address borrower, uint256 amount) external {
+    require(borrower != msg.sender, "!self vouch");
+
     stakers[borrower].vouches.push(Vouch({
       staker: msg.sender,
       borrower: borrower,
@@ -145,6 +164,26 @@ contract UToken is ERC20("uDAI", "uDAI") {
       amount: amount
     }));
   }
+
+  /* -------------------------------------------------------------------
+    View Functions
+  ------------------------------------------------------------------- */
+
+  /// @notice View function to get total vouch for a staker
+  /// @param who Stakers address
+  function totalVouch(address who) external view returns (uint256 total) {
+    Staker storage borrower = stakers[who];
+
+    for(uint256 i = 0; i < borrower.vouches.length; i++) {
+      Vouch storage vouch = borrower.vouches[i];
+      Staker storage staker = stakers[vouch.staker];
+      total += _max(staker.stakedAmount, vouch.amount) - staker.outstanding;
+    }
+  }
+
+  /* -------------------------------------------------------------------
+    Internal Functions 
+  ------------------------------------------------------------------- */
   
   /// @dev Get min of two numbers
   function _min(uint256 a, uint256 b) private pure returns (uint256) {
@@ -184,8 +223,16 @@ contract UToken is ERC20("uDAI", "uDAI") {
   
   /// @notice Sort vouches max vouch first
   /// @dev Problem here is you have to sort max available not just max vouch
-  function _sortVouchesInplace(Staker storage staker) private {
+  /// this is also currently using Bubble sort we should use quick sort but
+  /// not wifi on this plane to get it and I'm not giga chad that knows it off
+  /// the top of my head
+  /// it would also be cool if you can in place sort this rather than having to
+  /// do it everytime. However it's also kind of a bummer to sort inplace as later
+  /// we will need to know the staker index in the vouches array otherwise we wont
+  /// be able to update it so actually not doing it in place might be better
+  function _sortVouches(Staker storage staker) private view returns (Vouch[] storage vouches) {
     // TODO:
+    return staker.vouches;
   }
 
 }
