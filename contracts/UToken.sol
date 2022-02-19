@@ -43,6 +43,11 @@ contract UToken is ERC20("uDAI", "uDAI") {
   /// @param sender Sender who repaid
   /// @param amount Amount repaid
   event LogRepay(address sender, uint256 amount);
+  
+  /// @param _token Underlying token
+  constructor(IERC20 _token) {
+    token = _token;
+  }
 
   /// @notice Stake token (DAI) to underwrite loans
   /// @dev Staked tokens (DAI) is used to underwrite loan but is not the
@@ -125,6 +130,20 @@ contract UToken is ERC20("uDAI", "uDAI") {
     require(remaining <= 0, "!remaining");
     _processRepay(msg.sender, amount);
     emit LogRepay(msg.sender, amount);
+  }
+
+  /// @notice Update a vouch for a user
+  /// @dev for the sake of keeping this as simple as possible we
+  /// are going to ignore deplicate vouches and remove vouches etc
+  /// in reality you'd also want to tracking a mapping of vouch indexes
+  /// so we can update vouches 
+  function updateVouch(address borrower, uint256 amount) external {
+    stakers[borrower].vouches.push(Vouch({
+      staker: msg.sender,
+      borrower: borrower,
+      outstanding: 0,
+      amount: amount
+    }));
   }
   
   /// @dev Get min of two numbers
