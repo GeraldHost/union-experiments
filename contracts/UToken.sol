@@ -5,7 +5,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract UToken is ERC20("uDAI", "uDAI") {
-  IERC20 public token;
+
+  /* -------------------------------------------------------------------
+    Types 
+  ------------------------------------------------------------------- */
   
   struct Vouch {
     address staker;
@@ -21,6 +24,19 @@ contract UToken is ERC20("uDAI", "uDAI") {
     // members that are vouching for this staker
     Vouch[] vouches;
   }
+
+  struct VouchInfo {
+    // index in the Staker.vouches array
+    uint256 index;
+    // Staker.stakedAmount - Staker.outstanding
+    uint256 borrowAmount;
+  }
+
+  /* -------------------------------------------------------------------
+    Storage 
+  ------------------------------------------------------------------- */
+
+  IERC20 public token;
 
   mapping(address => Staker) public stakers;
 
@@ -95,23 +111,28 @@ contract UToken is ERC20("uDAI", "uDAI") {
   /// @param amount Amount of tokens (DAI) to borrow
   function borrow(uint256 amount) external {
     Staker storage borrower = stakers[msg.sender];
-    Vouch[] storage vouches = _sortVouches(borrower);
+    Vouch[] storage vouches = borrower.vouches;
 
     uint256 remaining = amount;
 
-    for(uint256 i = 0; i < vouches.length; i++) {
-      Vouch storage vouch = vouches[i];
-      Staker storage staker = stakers[vouch.staker];
+    VouchInfo[] memory vouchInfo = _getVouchInfo(vouches);
 
-      uint256 maxBorrowing = _max(staker.stakedAmount, vouch.amount) - staker.outstanding;
-      uint256 borrowing = _min(remaining, maxBorrowing);
+    uint256 c = 0;
 
-      staker.outstanding += borrowing;
+    for(uint256 i = 0; i < vouchInfo.length; i++) {
+      Vouch storage vouch = vouches[vouchInfo[i].index];
+
+      uint256 borrowing = _min(remaining, vouchInfo[i].borrowAmount);
+
+      stakers[vouch.staker].outstanding += borrowing;
       vouch.outstanding += borrowing;
 
       remaining -= borrowing;
+      c++;
       if(remaining <= 0) break;
     }
+
+    emit Debug(abi.encode(c));
     
     require(remaining <= 0, "!remaining");
     _processBorrow(msg.sender, amount);
@@ -123,12 +144,14 @@ contract UToken is ERC20("uDAI", "uDAI") {
   /// @param amount Amount of tokens (DAI) to repay
   function repay(uint256 amount) external {
     Staker storage borrower = stakers[msg.sender];
-    Vouch[] storage vouches = _sortVouches(borrower);
+    Vouch[] storage vouches = borrower.vouches; 
 
     uint256 remaining = amount;
 
-    for(uint256 i = 0; i < vouches.length; i++) {
-      Vouch storage vouch = vouches[i];
+    VouchInfo[] memory vouchInfo = _getVouchInfo(vouches);
+
+    for(uint256 i = 0; i < vouchInfo.length; i++) {
+      Vouch storage vouch = vouches[vouchInfo[i].index];
       Staker storage staker = stakers[vouch.staker];
 
       uint256 maxRepay = _min(remaining, vouch.outstanding);
@@ -148,7 +171,7 @@ contract UToken is ERC20("uDAI", "uDAI") {
   }
 
   /// @notice Update a vouch for a user
-  /// @dev for the sake of keeping this as simple as possible we
+  /// @dev FIXME: for the sake of keeping this as simple as possible we
   /// are going to ignore deplicate vouches and remove vouches etc
   /// in reality you'd also want to tracking a mapping of vouch indexes
   /// so we can update vouches 
@@ -221,18 +244,33 @@ contract UToken is ERC20("uDAI", "uDAI") {
     token.transfer(staker, amount);
   }
   
-  /// @notice Sort vouches max vouch first
-  /// @dev Problem here is you have to sort max available not just max vouch
-  /// this is also currently using Bubble sort we should use quick sort but
-  /// not wifi on this plane to get it and I'm not giga chad that knows it off
-  /// the top of my head
-  /// it would also be cool if you can in place sort this rather than having to
-  /// do it everytime. However it's also kind of a bummer to sort inplace as later
-  /// we will need to know the staker index in the vouches array otherwise we wont
-  /// be able to update it so actually not doing it in place might be better
-  function _sortVouches(Staker storage staker) private view returns (Vouch[] storage vouches) {
-    // TODO:
-    return staker.vouches;
+  /// @notice parse Vouch[] to VouchInfo[]
+  function _getVouchInfo(Vouch[] memory vouches) private view returns (VouchInfo[] memory) {
+    VouchInfo[] memory vouchInfo = new VouchInfo[](vouches.length);
+
+    for(uint256 i = 0; i < vouches.length; i++) {
+      Vouch memory vouch = vouches[i];
+      Staker memory staker = stakers[vouch.staker];
+      uint256 borrowAmount = _max(staker.stakedAmount, vouch.amount) - staker.outstanding;
+      vouchInfo[i] = VouchInfo(i, borrowAmount);
+    }
+    
+    return vouchInfo;
+    // return _sortVouchesInfo(vouchInfo);
   }
 
+  /// @notice sort VouchInfo[] max amount first
+  function _sortVouchesInfo(VouchInfo[] memory vouchInfo) private pure returns (VouchInfo[] memory) {
+    uint256 length = vouchInfo.length;
+    for (uint256 i = 0; i < length; i++) {
+      for (uint256 j = i + 1; j < length; j++) {
+        if (vouchInfo[i].borrowAmount < vouchInfo[j].borrowAmount) {
+          VouchInfo memory temp = vouchInfo[j];
+          vouchInfo[j] = vouchInfo[i];
+          vouchInfo[i] = temp;
+        }
+      }
+    }
+    return vouchInfo; 
+  }
 }

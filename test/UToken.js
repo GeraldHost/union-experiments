@@ -2,6 +2,8 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { parseEther, formatEther } = require("ethers/lib/utils");
 
+const debug = false;
+
 describe("UToken", function () {
   let accounts;
   let fauxToken;
@@ -16,7 +18,7 @@ describe("UToken", function () {
     deployerAddress = await deployer.getAddress();
     console.log("deployer:", deployerAddress);
 
-    accounts = allAccounts.slice(1, 11);
+    accounts = allAccounts.slice(1, 26);
 
     console.log("Accounts: ", accounts.length);
 
@@ -39,19 +41,26 @@ describe("UToken", function () {
         .connect(deployer)
         .transfer(accountAddress, parseEther("100"));
       const balance = await fauxToken.balanceOf(accountAddress);
-      console.log(
-        `Account ${accountAddress} has ${formatEther(balance)} tokens`
-      );
+      debug &&
+        console.log(
+          `Account ${accountAddress} has ${formatEther(balance)} tokens`
+        );
     }
   });
 
   it("happy path: stake", async () => {
+    let stakeTotalGasCost = 0;
+
     for (const account of accounts) {
       const accountAddress = await account.getAddress();
       const balance = await fauxToken.balanceOf(accountAddress);
       await fauxToken.connect(account).approve(uFauxToken.address, balance);
-      await uFauxToken.connect(account).stake(balance);
+      const tx = await uFauxToken.connect(account).stake(balance);
+      const resp = await tx.wait();
+      stakeTotalGasCost += Number(resp.cumulativeGasUsed.toString());
     }
+
+    console.log("Average stake gas cost:", stakeTotalGasCost / accounts.length);
 
     for (const account of accounts) {
       const accountAddress = await account.getAddress();
@@ -65,11 +74,19 @@ describe("UToken", function () {
   });
 
   it("happy path: unstake", async () => {
+    let totalUnstakeGasCost = 0;
     const amount = parseEther("1");
 
     for (const account of accounts) {
-      await uFauxToken.connect(account).unstake(amount.toString());
+      const tx = await uFauxToken.connect(account).unstake(amount.toString());
+      const resp = await tx.wait();
+      totalUnstakeGasCost += Number(resp.cumulativeGasUsed.toString());
     }
+
+    console.log(
+      "Average unstake gas cost:",
+      totalUnstakeGasCost / accounts.length
+    );
 
     for (const account of accounts) {
       const accountAddress = await account.getAddress();
@@ -83,9 +100,13 @@ describe("UToken", function () {
   });
 
   it("happy path: vouches", async () => {
-    const vouchAmount = parseEther("10");
+    let totalVouchGasCost = 0;
+    let gasCount = 0;
 
-    for (const staker of accounts) {
+    for (let i = 0; i < accounts.length; i++) {
+      const staker = accounts[i];
+      const vouchAmount = parseEther(`${i + 1}0`);
+
       const stakerAddress = await staker.getAddress();
 
       for (const borrower of accounts) {
@@ -95,11 +116,17 @@ describe("UToken", function () {
           continue;
         }
 
-        await uFauxToken
+        const tx = await uFauxToken
           .connect(staker)
           .updateVouch(borrowerAddress, vouchAmount);
+        const resp = await tx.wait();
+
+        totalVouchGasCost += Number(resp.cumulativeGasUsed.toString());
+        gasCount++;
       }
     }
+
+    console.log("Average updateVouch gas cost:", totalVouchGasCost / gasCount);
 
     for (const account of accounts) {
       const accountAddress = await account.getAddress();
@@ -112,7 +139,13 @@ describe("UToken", function () {
   it("happy path: borrow", async () => {
     const accountAddress = await accounts[0].getAddress();
     const balanceBefore = await fauxToken.balanceOf(accountAddress);
-    await uFauxToken.connect(accounts[0]).borrow(parseEther("10"));
+    const tx = await uFauxToken.connect(accounts[0]).borrow(parseEther("10"));
+    const resp = await tx.wait();
+
+    console.log(resp.events[0].args);
+
+    console.log("Borrow gas cost:", Number(resp.cumulativeGasUsed.toString()));
+
     const balanceAfter = await fauxToken.balanceOf(accountAddress);
 
     expect(balanceAfter.sub(balanceBefore).toString()).to.equal(
@@ -129,9 +162,12 @@ describe("UToken", function () {
       const accountAddress = await account.getAddress();
       const staker = await uFauxToken.stakers(accountAddress);
       const locked = staker.outstanding;
-      console.log(
-        `Staker ${accountAddress} has ${formatEther(locked.toString())} locked`
-      );
+      debug &&
+        console.log(
+          `Staker ${accountAddress} has ${formatEther(
+            locked.toString()
+          )} locked`
+        );
     }
   });
 
@@ -140,7 +176,11 @@ describe("UToken", function () {
     await fauxToken
       .connect(accounts[0])
       .approve(uFauxToken.address, parseEther("10"));
-    await uFauxToken.connect(accounts[0]).repay(parseEther("10"));
+    const tx = await uFauxToken.connect(accounts[0]).repay(parseEther("10"));
+    const resp = await tx.wait();
+
+    console.log("Repay gas cost:", Number(resp.cumulativeGasUsed.toString()));
+
     const balanceAfter = await fauxToken.balanceOf(accountAddress);
 
     expect(balanceAfter.toString()).to.equal(parseEther("1").toString());
@@ -150,9 +190,12 @@ describe("UToken", function () {
       const accountAddress = await account.getAddress();
       const staker = await uFauxToken.stakers(accountAddress);
       const locked = staker.outstanding;
-      console.log(
-        `Staker ${accountAddress} has ${formatEther(locked.toString())} locked`
-      );
+      debug &&
+        console.log(
+          `Staker ${accountAddress} has ${formatEther(
+            locked.toString()
+          )} locked`
+        );
     }
   });
 });
