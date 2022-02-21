@@ -70,8 +70,33 @@ func unstake{
 
 end
 
-# func vouch(staker: felt, borrower: felt, amount: felt):
-# end
+func vouch{
+        syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
+        range_check_ptr}(staker: felt, borrower: felt, amount: felt):
+    let (current_staker) = stakers.read(staker)
+    let (current_borrower) = stakers.read(borrower)
+
+    let new_staker = Staker(
+        staked=current_staker.staked,
+        vouchesGiven=current_staker.vouchesGiven + 1,
+        vouchesRecieved=current_staker.vouchesRecieved
+    )
+
+    stakers.write(staker, new_staker)
+
+    let new_borrower = Staker(
+        staked=current_staker.staked,
+        vouchesGiven=current_staker.vouchesGiven,
+        vouchesRecieved=current_staker.vouchesRecieved + 1
+    )
+
+    stakers.write(borrower, new_borrower)
+
+    let vouch = Vouch(borrower=borrower, amount=amount)
+
+    vouches.write(staker, current_staker.vouchesGiven, vouch)
+    return ()
+end
 
 # func borrow(staker: felt, amount: felt):
 # end
