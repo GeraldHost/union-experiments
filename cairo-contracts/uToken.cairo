@@ -1,7 +1,7 @@
 %lang starknet
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin 
-from starkware.cairo.common.math import assert_nn
+from starkware.cairo.common.math import assert_nn, assert_le
 
 #-------------------------------------------------------------
 # Types 
@@ -11,6 +11,8 @@ struct Staker:
     member staker: felt
     # amount staked
     member staked: felt
+    # amount borrowed
+    member outstanding: felt
     # number of vouches given
     member vouchesGiven: felt
     # number of vouches recieved
@@ -18,7 +20,7 @@ struct Staker:
 end
 
 struct Vouch:
-    member borrower: felt
+    member staker: felt
     member amount: felt
 end
 
@@ -38,6 +40,7 @@ end
 # Core 
 #-------------------------------------------------------------
 
+@external
 func stake{
         syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
         range_check_ptr}(staker: felt, amount: felt):
@@ -46,6 +49,7 @@ func stake{
     let new_staker = Staker(
         staker=current_staker.staker,
         staked=current_staker.staked + amount,
+        outstanding=current_staker.outstanding,
         vouchesGiven=current_staker.vouchesGiven,
         vouchesRecieved=current_staker.vouchesRecieved
     )
@@ -54,6 +58,7 @@ func stake{
     return ()
 end
 
+@external
 func unstake{
         syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
         range_check_ptr}(staker: felt, amount: felt):
@@ -64,6 +69,7 @@ func unstake{
     let new_staker = Staker(
         staker=current_staker.staker,
         staked=current_staker.staked - amount,
+        outstanding=current_staker.outstanding,
         vouchesGiven=current_staker.vouchesGiven,
         vouchesRecieved=current_staker.vouchesRecieved
     )
@@ -73,6 +79,7 @@ func unstake{
 
 end
 
+@external
 func updateVouch{
         syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
         range_check_ptr}(staker: felt, borrower: felt, amount: felt):
@@ -82,6 +89,7 @@ func updateVouch{
     let new_staker = Staker(
         staker=current_staker.staker,
         staked=current_staker.staked,
+        outstanding=current_staker.outstanding,
         vouchesGiven=current_staker.vouchesGiven + 1,
         vouchesRecieved=current_staker.vouchesRecieved
     )
@@ -91,28 +99,69 @@ func updateVouch{
     let new_borrower = Staker(
         staker=current_borrower.staker,
         staked=current_borrower.staked,
+        outstanding=current_borrower.outstanding,
         vouchesGiven=current_borrower.vouchesGiven,
         vouchesRecieved=current_borrower.vouchesRecieved + 1
     )
 
     stakers.write(borrower, new_borrower)
 
-    let vouch = Vouch(borrower=borrower, amount=amount)
+    let vouch = Vouch(staker=staker, amount=amount)
 
-    vouches.write(staker, current_staker.vouchesGiven, vouch)
+    vouches.write(borrower, current_borrower.vouchesRecieved, vouch)
     return ()
 end
 
-# func borrow(staker: felt, amount: felt):
-# end
+@external
+func borrow{
+        syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
+        range_check_ptr}(staker: felt, amount: felt):
+    alloc_locals
 
-# func repay(staker: felt, amount: felt):
-# end
+    let (current_staker) = stakers.read(staker)
+    let (credit_limit) = _get_credit_limit(current_staker, 0, 0)
+
+    assert_le(amount, credit_limit)
+    
+    let new_staker = Staker(
+        staker=current_staker.staker,
+        staked=current_staker.staked,
+        outstanding=current_staker.outstanding + amount,
+        vouchesGiven=current_staker.vouchesGiven,
+        vouchesRecieved=current_staker.vouchesRecieved
+    )
+
+    stakers.write(staker, new_staker)
+    return ()
+end
+
+@external
+func repay{
+        syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
+        range_check_ptr}(staker: felt, amount: felt):
+    alloc_locals
+
+    let (current_staker) = stakers.read(staker)
+
+    assert_le(amount, current_staker.outstanding)
+    
+    let new_staker = Staker(
+        staker=current_staker.staker,
+        staked=current_staker.staked,
+        outstanding=current_staker.outstanding - amount,
+        vouchesGiven=current_staker.vouchesGiven,
+        vouchesRecieved=current_staker.vouchesRecieved
+    )
+
+    stakers.write(staker, new_staker)
+    return ()
+end
 
 #-------------------------------------------------------------
 # Internal 
 #-------------------------------------------------------------
 
+@view
 func _get_credit_limit{
         syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
         range_check_ptr}(staker: Staker, index: felt, amount: felt) -> (res: felt):
@@ -122,14 +171,14 @@ func _get_credit_limit{
         return (amount)
     end
 
-    # TODO: lookup staked value of vouch
-    # BROKEN
-    # We need to store vouches for and vouches given in order to make this
-    # credit lookup work, which means lots of storage shit in updateVouch
-    # then we should be able to loop to figure out credit limit
     let (vouch) = vouches.read(staker.staker, index)
     let (current_staker) = stakers.read(vouch.staker)
     let value = vouch.amount - current_staker.staked
+
+    # TODO: need to also calculate the locked amounts to do this
+    # it is going to be cheap to do reads but we need to change
+    # updateVouch to also track the other vouch amounts and outsanding
+
     let (sum_rest) = _get_credit_limit(staker, index + 1, amount + value)
     return (value + sum_rest)
 end
