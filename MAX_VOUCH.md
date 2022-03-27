@@ -20,10 +20,22 @@ this approach even more limiting that (1)
 ## DOS
 
 One of the worries is that the system can become locked up in the scenario where we have to calculate the
-locked stake of each voucher so we have to impose and artificial limit to prevent this if we take the
-approach of (2). This is super bad.
+locked stake of each voucher so we have to impose a limit to prevent this if we take the approach of (2).
+This is super bad.
 
 If we are updating the state as we go as in the case of (1) We don't need to worry about a DOS because
 the gas limit is just limiting in the context of a single borrow, so if you run out of gas you can just
 reduce the amount you want to borrow and therefor reduce the number of staker states you need to update.
 This is obviously still not ideal.
+
+## Solution
+
+(2) is unscallable on an EVM chain, although on a zk chain it's potentially better because computation is
+much much cheaper
+
+(1) is scalable on an EVM chain. Even though you can have a situation where the borrow runs out of
+gas because you are trying to borrow from too many accounts which will cause a min of 20k gas per update,
+You only need to protect the sorting function from being DOSd. (if we decide to keep the sort)
+
+There would also likely be more chance to make the sorts cheaper compared to trying to make less storage
+writes.
