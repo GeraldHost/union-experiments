@@ -54,7 +54,7 @@ describe("UTokenV1", function () {
     return [stakerAddress, stakedAmount, 0, []];
   };
 
-  describe("for a single staker/borrower", () => {
+  xdescribe("for a single staker/borrower", () => {
     let staker;
     let borrower;
 
@@ -103,7 +103,7 @@ describe("UTokenV1", function () {
     let stakerStructs = [];
 
     before(() => {
-      stakers = accounts.slice(2, 25);
+      stakers = accounts.slice(2, 22);
     });
 
     it("stake", async () => {
@@ -137,17 +137,11 @@ describe("UTokenV1", function () {
       log("borrower vouches", borrowerStruct[3].length);
       log("staker vouches", stakerStructs.length);
 
-      // TODO: max size of bytes?????
-      const calldata = uFauxToken.interface.encodeFunctionData(
-        "borrow((address,uint256,uint256,(address,uint256)[]),(address,uint256,uint256,(address,uint256)[])[],uint256)",
-        [borrowerStruct, stakerStructsInput, borrowAmount]
-      );
-      console.log(calldata.length);
-      await uFauxToken.bytesTest(calldata);
-
       const tx = await uFauxToken
         .connect(stakers[0])
-        .borrow(borrowerStruct, stakerStructsInput, borrowAmount);
+        .borrow(borrowerStruct, stakerStructsInput, borrowAmount, {
+          gasLimit: 30000000,
+        });
       const resp = await tx.wait();
 
       log("gas", resp.cumulativeGasUsed.toString());

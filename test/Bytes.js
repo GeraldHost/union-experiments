@@ -14,7 +14,7 @@ describe("Bytes", function () {
           .join("");
 
       console.log("calldata size:", calldata.length);
-      const tx = await bytes.b(calldata);
+      const tx = await bytes.b(calldata, { gasLimit: 30000000 });
       const resp = await tx.wait();
       console.log("gas", resp.cumulativeGasUsed.toString());
     }

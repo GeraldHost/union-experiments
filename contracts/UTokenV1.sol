@@ -138,7 +138,21 @@ contract UTokenV1 is ERC20("uDAI", "uDAI") {
       VouchInfo memory info = VouchInfo(i, borrowAmount);
       infoArr[i] = info;
     }
-    return infoArr;
+    return _sortVouchesInfo(infoArr);
+  }
+
+  function _sortVouchesInfo(VouchInfo[] memory vouchInfo) private pure returns (VouchInfo[] memory) {
+    uint256 length = vouchInfo.length;
+    for (uint256 i = 0; i < length; i++) {
+      for (uint256 j = i + 1; j < length; j++) {
+        if (vouchInfo[i].borrowAmount < vouchInfo[j].borrowAmount) {
+          VouchInfo memory temp = vouchInfo[j];
+          vouchInfo[j] = vouchInfo[i];
+          vouchInfo[i] = temp;
+        }
+      }
+    }
+    return vouchInfo; 
   }
 
   function _root(Staker memory staker) public returns (bytes32) {
