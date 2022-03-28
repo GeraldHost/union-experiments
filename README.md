@@ -22,7 +22,7 @@ really quickly when looking up each staker struct which is about ~5 slots. Say w
 
 ### Updating storage
 
-One approach is to update the state of each staker when you borrow so you track the The problem with
+One approach is to update the state of each staker when you borrow so you track the outstanding amount. The problem with
 this is that even if it's (optimistically) a single SSTORE it's 20k gas per staker and then maybe 10k spent
 on loading the vouch struct and another 10k loading the staker struct. So you are always going to hit a limit
 pretty quick.
