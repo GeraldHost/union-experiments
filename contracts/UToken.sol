@@ -12,8 +12,6 @@ contract UToken is ERC20("uDAI", "uDAI") {
   
   struct Vouch {
     address staker;
-    address borrower;
-    uint256 outstanding;
     uint256 amount;
   }
 
@@ -125,7 +123,6 @@ contract UToken is ERC20("uDAI", "uDAI") {
       uint256 borrowing = _min(remaining, vouchInfo[i].borrowAmount);
 
       stakers[vouch.staker].outstanding += borrowing;
-      vouch.outstanding += borrowing;
 
       remaining -= borrowing;
       c++;
@@ -151,15 +148,14 @@ contract UToken is ERC20("uDAI", "uDAI") {
     VouchInfo[] memory vouchInfo = _getVouchInfo(vouches);
 
     for(uint256 i = 0; i < vouchInfo.length; i++) {
-      Vouch storage vouch = vouches[vouchInfo[i].index];
+      Vouch memory vouch = vouches[vouchInfo[i].index];
       Staker storage staker = stakers[vouch.staker];
 
-      uint256 maxRepay = _min(remaining, vouch.outstanding);
+      uint256 maxRepay = _min(remaining, staker.outstanding);
 
       if(maxRepay <= 0) continue;
 
       staker.outstanding -= maxRepay;
-      vouch.outstanding -= maxRepay;
 
       remaining -= maxRepay;
       if(remaining <= 0) break;
@@ -182,8 +178,6 @@ contract UToken is ERC20("uDAI", "uDAI") {
 
     stakers[borrower].vouches.push(Vouch({
       staker: msg.sender,
-      borrower: borrower,
-      outstanding: 0,
       amount: amount
     }));
   }
@@ -198,8 +192,8 @@ contract UToken is ERC20("uDAI", "uDAI") {
     Staker storage borrower = stakers[who];
 
     for(uint256 i = 0; i < borrower.vouches.length; i++) {
-      Vouch storage vouch = borrower.vouches[i];
-      Staker storage staker = stakers[vouch.staker];
+      Vouch memory vouch = borrower.vouches[i];
+      Staker memory staker = stakers[vouch.staker];
       total += _max(staker.stakedAmount, vouch.amount) - staker.outstanding;
     }
   }
@@ -255,8 +249,7 @@ contract UToken is ERC20("uDAI", "uDAI") {
       vouchInfo[i] = VouchInfo(i, borrowAmount);
     }
     
-    return vouchInfo;
-    // return _sortVouchesInfo(vouchInfo);
+    return _sortVouchesInfo(vouchInfo);
   }
 
   /// @notice sort VouchInfo[] max amount first

@@ -10,7 +10,7 @@ One of the problems is that the system can become locked up in the scenario wher
 locked stake of each voucher. We have to impose a limit to prevent this. Currently we have a max vouchers
 limit of 25. This is not great.
 
-## Computing it at the time of borrow
+### Computing it at the time of borrow
 
 Currently we do this. When somebody wants to borrow we loop through all their stakers, then we loop through
 all the stakers borrowers to calculate how much of the stakers stake is already locked in order to get the
@@ -25,7 +25,7 @@ really quickly when looking up each staker struct which is about ~5 slots. Say w
 One approach is to update the state of each staker when you borrow so you track the The problem with
 this is that even if it's (optimistically) a single SSTORE it's 20k gas per staker and then maybe 10k spent
 on loading the vouch struct and another 10k loading the staker struct. So you are always going to hit a limit
-of pretty quick.
+pretty quick.
 
 ### Root storage
 
@@ -34,7 +34,7 @@ hash of the struct (bytes32). Then the structs are passed in as calldata. The cl
 from the events. The benefit of this over "Updating Storage" is that we don't have to pay to load the structs
 from storage and the cost to update the staker is a single slot 20k gas. We also don't have to worry about any
 DOS attacks because we can never get locked up, We can only end up out of gas if we are borrowing an amount that
-means we have to borrow from many stakers.
+means we have to borrow from many stakers (and in this case we can just do multiple borrow transactions).
 
 ## Questions
 
