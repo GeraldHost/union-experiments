@@ -39,3 +39,7 @@ You only need to protect the sorting function from being DOSd. (if we decide to 
 
 There would also likely be more chance to make the sorts cheaper compared to trying to make less storage
 writes.
+
+## Bytes size
+
+(2) problem with this method is you quickly end up running out of calldata bytes.
