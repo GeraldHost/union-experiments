@@ -20,7 +20,7 @@ describe("UTokenV1", function () {
     deployerAddress = await deployer.getAddress();
     log("deployer:", deployerAddress);
 
-    accounts = allAccounts.slice(1, 51);
+    accounts = allAccounts.slice(0, 50);
 
     log("Accounts: ", accounts.length);
 
@@ -103,7 +103,7 @@ describe("UTokenV1", function () {
     let stakerStructs = [];
 
     before(() => {
-      stakers = accounts.slice(2, 22);
+      stakers = accounts.slice(2);
     });
 
     it("stake", async () => {
@@ -130,7 +130,8 @@ describe("UTokenV1", function () {
     });
 
     it("borrow", async () => {
-      const borrowAmount = parseEther("10");
+      // This borrows from 10*100 stakers
+      const borrowAmount = parseEther("1000");
       const borrowerStruct = stakerStructs[0];
       const stakerStructsInput = stakerStructs.slice(1);
 
@@ -139,7 +140,7 @@ describe("UTokenV1", function () {
 
       const tx = await uFauxToken
         .connect(stakers[0])
-        .borrow(borrowerStruct, stakerStructsInput, borrowAmount, {
+        .borrowSimple(borrowerStruct, stakerStructsInput, borrowAmount, {
           gasLimit: 30000000,
         });
       const resp = await tx.wait();

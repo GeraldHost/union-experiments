@@ -75,11 +75,43 @@ contract UTokenV1 is ERC20("uDAI", "uDAI") {
     uint i = 0;
 
     while (remaining > 0) {
-      require(i < len, "end");
+      require(i < len, "!enough vouch");
 
       Staker memory staker = stakers[info[i].index];
       uint256 borrowing = _min(remaining, info[i].borrowAmount);
       console.log("%s", borrowing);
+      staker.outstanding += borrowing;
+      // 2. (a) save update staker root
+      roots[staker.addr] = _root(staker);
+      remaining -= borrowing;
+      if(remaining <= 0) break;
+      ++i;
+    }
+    
+    require(remaining <= 0, "!remaining");
+  }
+
+  // A simple version of borrow that doesn't sort
+  function borrowSimple(
+    Staker memory borrower, 
+    Staker[] memory stakers, 
+    uint amount
+  ) external {
+    require(roots[borrower.addr] == _root(borrower), "!root");
+    require(borrower.vouches.length == stakers.length, "!parity");
+    // 2. loop through until we have the amount we need
+    //    updating the vouchers roots as we go
+    uint remaining = amount;
+    uint len = stakers.length; 
+    uint i = 0;
+
+    while (remaining > 0) {
+      require(i < len, "!enough vouch");
+
+      Staker memory staker = stakers[i];
+      require(staker.addr == borrower.vouches[i].addr, "!staker");
+
+      uint256 borrowing = _min(remaining, staker.stakedAmount - staker.outstanding);
       staker.outstanding += borrowing;
       // 2. (a) save update staker root
       roots[staker.addr] = _root(staker);
