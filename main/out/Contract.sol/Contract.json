@@ -1,0 +1,56 @@
+{
+  "abi": [],
+  "bytecode": {
+    "object": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea264697066735822122070536385cb6267a2a95908133584ab21445427896d3ec29fae76374f8353ec7464736f6c634300080a0033",
+    "sourceMap": "64:20:1:-:0;;;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x6080604052600080fdfea264697066735822122070536385cb6267a2a95908133584ab21445427896d3ec29fae76374f8353ec7464736f6c634300080a0033",
+    "sourceMap": "64:20:1:-:0;;;;;",
+    "linkReferences": {}
+  },
+  "ast": {
+    "absolutePath": "/Users/lenny/Workspace/union-experiments/main/src/Contract.sol",
+    "exportedSymbols": {
+      "Contract": [
+        1683
+      ]
+    },
+    "id": 1684,
+    "license": "UNLICENSED",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1682,
+        "literals": [
+          "solidity",
+          "0.8",
+          ".10"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "39:23:1"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "Contract",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "id": 1683,
+        "linearizedBaseContracts": [
+          1683
+        ],
+        "name": "Contract",
+        "nameLocation": "73:8:1",
+        "nodeType": "ContractDefinition",
+        "nodes": [],
+        "scope": 1684,
+        "src": "64:20:1",
+        "usedErrors": []
+      }
+    ],
+    "src": "39:46:1"
+  }
+}
