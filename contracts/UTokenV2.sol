@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./test/console.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract UToken {
+contract UTokenV2 {
 
   /* -------------------------------------------------------------------
     Types 
@@ -24,6 +25,8 @@ contract UToken {
   /* -------------------------------------------------------------------
     Storage 
   ------------------------------------------------------------------- */
+
+  IERC20 public token;
 
   mapping(address => Staker) public stakers;
 
@@ -57,7 +60,9 @@ contract UToken {
     Constructooor 
   ------------------------------------------------------------------- */
   
-  constructor() {}
+  constructor(IERC20 _token) {
+    token = _token;
+  }
 
   /* -------------------------------------------------------------------
     Core Functions
@@ -116,8 +121,7 @@ contract UToken {
   }
 
   /// @notice Update a vouch for a user
-  function updateVouch(address staker, address borrower, uint256 amount) public {
-    // TODO: remove staker argument
+  function updateVouch(address borrower, uint256 amount) public {
     require(borrower != msg.sender, "!self vouch");
     vouchers[msg.sender].push(Vouch(msg.sender, amount, 0));
   }
@@ -127,8 +131,7 @@ contract UToken {
   ------------------------------------------------------------------- */
 
   /// @notice View function to get total vouch for a staker
-  function totalVouch() public view returns (uint256 total) {
-    address who = msg.sender;
+  function totalVouch(address who) public view returns (uint256 total) {
     for(uint256 i = 0; i < vouchers[who].length; i++) {
       Vouch memory vouch = vouchers[who][i];
       Staker memory staker = stakers[vouch.staker];
@@ -154,25 +157,25 @@ contract UToken {
   
   /// @dev Send tokens from contract to borrower
   function _processBorrow(address borrower, uint256 amount) private {
-    // token.transfer(borrower, amount);
+    token.transfer(borrower, amount);
   }
 
   /// @dev Send tokens from borrower to contract
   function _processRepay(address borrower, uint256 amount) private {
-    // token.transferFrom(borrower, address(this), amount);
+    token.transferFrom(borrower, address(this), amount);
   }
   
   /// @dev Send tokens from staker to contract
   /// @param staker Staker to recieve tokens from
   /// @param amount Amount of tokens to send
   function _processStake(address staker, uint256 amount) private {
-    // token.transferFrom(staker, address(this), amount);
+    token.transferFrom(staker, address(this), amount);
   }
 
   /// @dev Send tokens from contract to staker 
   /// @param staker Staker to send tokens to
   /// @param amount Amount of tokens to send
   function _processUnstake(address staker, uint256 amount) private {
-    // token.transfer(staker, amount);
+    token.transfer(staker, amount);
   }
 }
