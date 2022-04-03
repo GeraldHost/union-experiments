@@ -1,0 +1,132 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        }
+      ],
+      "name": "b",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x608060405234801561001057600080fd5b50610130806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c80637549ad5514602d575b600080fd5b603b60383660046053565b50565b005b634e487b7160e01b600052604160045260246000fd5b600060208284031215606457600080fd5b813567ffffffffffffffff80821115607b57600080fd5b818401915084601f830112608e57600080fd5b813581811115609d57609d603d565b604051601f8201601f19908116603f0116810190838211818310171560c25760c2603d565b8160405282815287602084870101111560da57600080fd5b82602086016020830137600092810160200192909252509594505050505056fea2646970667358221220e52fbf851938a99d8a02a88de791983072cddf4cd9fc1677096b24fe4ace768b64736f6c634300080b0033",
+    "sourceMap": "25:57:0:-:0;;;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c80637549ad5514602d575b600080fd5b603b60383660046053565b50565b005b634e487b7160e01b600052604160045260246000fd5b600060208284031215606457600080fd5b813567ffffffffffffffff80821115607b57600080fd5b818401915084601f830112608e57600080fd5b813581811115609d57609d603d565b604051601f8201601f19908116603f0116810190838211818310171560c25760c2603d565b8160405282815287602084870101111560da57600080fd5b82602086016020830137600092810160200192909252509594505050505056fea2646970667358221220e52fbf851938a99d8a02a88de791983072cddf4cd9fc1677096b24fe4ace768b64736f6c634300080b0033",
+    "sourceMap": "25:57:0:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;44:36;;;;;;:::i;:::-;;;;;14:127:9;75:10;70:3;66:20;63:1;56:31;106:4;103:1;96:15;130:4;127:1;120:15;146:921;214:6;267:2;255:9;246:7;242:23;238:32;235:52;;;283:1;280;273:12;235:52;323:9;310:23;352:18;393:2;385:6;382:14;379:34;;;409:1;406;399:12;379:34;447:6;436:9;432:22;422:32;;492:7;485:4;481:2;477:13;473:27;463:55;;514:1;511;504:12;463:55;550:2;537:16;572:2;568;565:10;562:36;;;578:18;;:::i;:::-;653:2;647:9;621:2;707:13;;-1:-1:-1;;703:22:9;;;727:2;699:31;695:40;683:53;;;751:18;;;771:22;;;748:46;745:72;;;797:18;;:::i;:::-;837:10;833:2;826:22;872:2;864:6;857:18;912:7;907:2;902;898;894:11;890:20;887:33;884:53;;;933:1;930;923:12;884:53;989:2;984;980;976:11;971:2;963:6;959:15;946:46;1034:1;1012:15;;;1029:2;1008:24;1001:35;;;;-1:-1:-1;1016:6:9;146:921;-1:-1:-1;;;;;146:921:9:o",
+    "linkReferences": {}
+  },
+  "ast": {
+    "absolutePath": "/Users/lenny/Workspace/union-experiments/contracts/Bytes.sol",
+    "exportedSymbols": {
+      "Bytes": [
+        8
+      ]
+    },
+    "id": 9,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:0"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "Bytes",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "id": 8,
+        "linearizedBaseContracts": [
+          8
+        ],
+        "name": "Bytes",
+        "nameLocation": "34:5:0",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 6,
+              "nodeType": "Block",
+              "src": "78:2:0",
+              "statements": []
+            },
+            "functionSelector": "7549ad55",
+            "id": 7,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "b",
+            "nameLocation": "53:1:0",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 4,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 3,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7,
+                  "src": "55:12:0",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_memory_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 2,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "55:5:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "54:14:0"
+            },
+            "returnParameters": {
+              "id": 5,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "78:0:0"
+            },
+            "scope": 8,
+            "src": "44:36:0",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 9,
+        "src": "25:57:0",
+        "usedErrors": []
+      }
+    ],
+    "src": "0:83:0"
+  }
+}

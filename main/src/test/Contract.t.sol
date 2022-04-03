@@ -30,8 +30,6 @@ contract ContractTest is DSTest {
   mapping(address => Vouch[]) public vouchers;
 
   function borrow(uint256 amount, address borrower_) public {
-    Staker storage borrower = stakers[borrower_];
-
     uint256 remaining = amount;
 
     for(uint256 i = 0; i < vouchers[borrower_].length; i++) {
