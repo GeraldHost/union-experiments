@@ -1,0 +1,3 @@
+[submodule "main/lib/ds-test"]
+	path = main/lib/ds-test
+	url = https://github.com/dapphub/ds-test
