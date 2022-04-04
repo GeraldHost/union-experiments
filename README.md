@@ -46,3 +46,9 @@ are loading them from calldata you're paying 16 gas/byte. Ideally users should b
 reduce the amount of calldata they need to send. But if you don't send the full set you can't sort them by vouch.
 
 This is the real problem we need to solve. How do we make an EVM friendly but fair way of doing consistent lockups.
+
+First in first out seems like a way to simplify this sorting process and still seems to satisfy the element of "fair" only
+problem is you can have a greifing attack where many small vouchers vouch for you and cause you to consume more gas for
+a borrow. You could obviously remove such vouchers, or make a system where you have to accept vouches to your network to
+control this. Another way of dealing with this problem would be to allow the borrower to submit an array of vouches they
+want to pay back... this would no longer be first in first out but it's a consideration.
