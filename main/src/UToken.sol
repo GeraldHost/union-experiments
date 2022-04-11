@@ -11,13 +11,13 @@ contract UToken {
   
   struct Vouch {
     address staker;
-    uint256 amount;
-    uint256 outstanding;
+    uint128 amount;
+    uint128 outstanding;
   }
 
   struct Staker {
-    uint256 stakedAmount;
-    uint256 outstanding;
+    uint128 stakedAmount;
+    uint128 outstanding;
   }
 
 
@@ -67,7 +67,7 @@ contract UToken {
   /// @dev Staked tokens (DAI) is used to underwrite loan but is not the
   /// capital that is borrowed. Emits `LogStake` event
   /// @param amount Amount of token (DAI) to stake
-  function stake(uint256 amount) public {
+  function stake(uint128 amount) public {
     Staker storage staker = stakers[msg.sender];
     staker.stakedAmount += amount;
 
@@ -79,7 +79,7 @@ contract UToken {
   /// @dev Can only unstake tokens that are not currently locked and underwriting
   /// active loans emits `LogUnstake` event
   /// @param amount Amount of token (DAI) to unstake
-  function unstake(uint256 amount) public {
+  function unstake(uint128 amount) public {
     Staker storage staker = stakers[msg.sender];
     uint256 unstakeable = staker.stakedAmount - staker.outstanding;
     require(unstakeable >= amount, "!liquid");
@@ -92,16 +92,16 @@ contract UToken {
   /// @notice Borrow tokens (DAI) from contract
   /// @dev emits `LogBorrow` event
   /// @param amount Amount of tokens (DAI) to borrow
-  function borrow(uint256 amount) public {
-    uint256 remaining = amount;
+  function borrow(uint128 amount) public {
+    uint128 remaining = amount;
 
     for(uint256 i = 0; i < vouchers[msg.sender].length; i++) {
       Vouch storage vouch = vouchers[msg.sender][i];
       
-      uint borrowAmount = vouch.amount - vouch.outstanding;
+      uint128 borrowAmount = vouch.amount - vouch.outstanding;
       if(borrowAmount <= 0) continue;
 
-      uint256 borrowing = _min(remaining, borrowAmount);
+      uint128 borrowing = _min(remaining, borrowAmount);
 
       stakers[vouch.staker].outstanding += borrowing;
       vouch.outstanding += borrowing;
@@ -116,7 +116,7 @@ contract UToken {
   }
 
   /// @notice Update a vouch for a user
-  function updateVouch(address staker, address borrower, uint256 amount) public {
+  function updateVouch(address staker, address borrower, uint128 amount) public {
     // TODO: remove staker argument
     require(borrower != msg.sender, "!self vouch");
     vouchers[msg.sender].push(Vouch(msg.sender, amount, 0));
@@ -141,7 +141,7 @@ contract UToken {
   ------------------------------------------------------------------- */
   
   /// @dev Get min of two numbers
-  function _min(uint256 a, uint256 b) private pure returns (uint256) {
+  function _min(uint128 a, uint128 b) private pure returns (uint128) {
     if(a < b) return a;
     return b;
   }
