@@ -52,3 +52,21 @@ problem is you can have a greifing attack where many small vouchers vouch for yo
 a borrow. You could obviously remove such vouchers, or make a system where you have to accept vouches to your network to
 control this. Another way of dealing with this problem would be to allow the borrower to submit an array of vouches they
 want to pay back... this would no longer be first in first out but it's a consideration.
+
+
+### Total Frozen
+
+In order to determine rate of Union we use `totalFrozen` (the amount of defaulted DAI), `totalStaked` and `totalBorrowed` for
+each member. Lets consider we are taking the approach "Updating Storage". `totalStaked` and `totalBorrowed` are just lookups
+on the member so that is easy. However, in order to calculate `totalFrozen` in the worse case scenario we need to loop through
+every vouch.
+
+#### Calculating Total Frozen
+
+-  Loop through each vouch, 1. lookup the last time the staker made a repayment, 2. check if they are overdue, 3. if they are overdue
+   add their value to the sum amount. The problem with this is this now becomes a DOS vector. If there are too many borrowers it can end
+   up costing too much gas to calculate. `2100` for cold storage access, 2x lookups. Maybe `4200` min per staker. We could cache this value
+   for 24hrs or something although feels unlikely that somebody is making multiple unstakes in a 24hr period so not sure how useful this
+   would actually be.
+-  TBD
+
