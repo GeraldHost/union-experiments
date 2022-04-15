@@ -67,6 +67,6 @@ every vouch.
    add their value to the sum amount. The problem with this is this now becomes a DOS vector. If there are too many borrowers it can end
    up costing too much gas to calculate. `2100` for cold storage access, 2x lookups. Maybe `4200` min per staker. We could cache this value
    for 24hrs or something although feels unlikely that somebody is making multiple unstakes in a 24hr period so not sure how useful this
-   would actually be.
+   would actually be. Update: An initial test shows `7190423` for looping through 1000 vouches (~7.1k gas/vouch).
 -  TBD
 
