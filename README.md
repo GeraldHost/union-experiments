@@ -68,5 +68,5 @@ every vouch.
    up costing too much gas to calculate. `2100` for cold storage access, 2x lookups. Maybe `4200` min per staker. We could cache this value
    for 24hrs or something although feels unlikely that somebody is making multiple unstakes in a 24hr period so not sure how useful this
    would actually be. Update: An initial test shows `7190423` for looping through 1000 vouches (~7.1k gas/vouch).
--  TBD
-
+   - Calculating frozen in this way would mean we'd have to add DOS protection on how many people you vouch for otherwise claiming Union would fail
+   - One thing to consider is that if we can group vouches we could potentially enforce this limit for a group of vouches but total vouches for a single member could remain unlimitted.
