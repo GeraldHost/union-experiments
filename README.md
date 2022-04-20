@@ -70,3 +70,19 @@ every vouch.
    would actually be. Update: An initial test shows `7190423` for looping through 1000 vouches (~7.1k gas/vouch).
    - Calculating frozen in this way would mean we'd have to add DOS protection on how many people you vouch for otherwise claiming Union would fail
    - One thing to consider is that if we can group vouches we could potentially enforce this limit for a group of vouches but total vouches for a single member could remain unlimitted.
+
+#### Interest
+
+We also need to consider that interest is accruing on each outstanding amount. Therefore to calculate the locked value for each voucher when you borrow you need to know the interest accrued on each loan.
+
+example:
+- Steve vouches for Alice, Bob and Ryan
+- Alice borrows 100 from Steve @ block 1 
+- Bob borrows 100 from Steve @ block 2 (need to know interest accrued on Alice)
+- Ryan borrows 100 from Steve @ block 3 (need to know interest accrued on Alice and Bob)
+
+### Questions
+
+- deterministic lock and unlock
+- should you have to accept a vouch?
+- 
